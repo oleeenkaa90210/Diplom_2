@@ -42,6 +42,14 @@ class TestGetUserOrders(unittest.TestCase):
             assert order_response.status_code == 200 and order_response_data.get('success') is True
             cls.orders.append(order_response_data['order'])
 
+    @classmethod
+    def tearDownClass(cls):
+        headers = {
+            "authorization": cls.tokens['accessToken']
+        }
+        response = requests.delete(Urls.USER_DELETE_URL, headers=headers)
+        assert response.status_code == 202
+
     @allure.title('Получение заказов авторизованного пользователя')
     def test_get_user_orders(self):
         headers = {"authorization": self.tokens['accessToken']}

@@ -26,6 +26,14 @@ class TestChangeUserData(unittest.TestCase):
         cls.tokens['accessToken'] = response_data['accessToken']
         cls.tokens['refreshToken'] = response_data['refreshToken']
 
+    @classmethod
+    def tearDownClass(cls):
+        headers = {
+            "authorization": cls.tokens['accessToken']
+        }
+        response = requests.delete(Urls.USER_DELETE_URL, headers=headers)
+        assert response.status_code == 202
+
     @allure.title('Изменение данных пользователя с авторизацией')
     def test_update_user_with_authorization(self):
         headers = {

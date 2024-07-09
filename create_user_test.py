@@ -16,23 +16,32 @@ def generate_random_user_data():
     return user_data
 
 
+@classmethod
+def tearDownClass(cls):
+    headers = {
+        "authorization": cls.tokens['accessToken']
+    }
+    response = requests.delete(Urls.USER_DELETE_URL, headers=headers)
+    assert response.status_code == 202
+
+
 class TestUserCreation(unittest.TestCase):
 
     @allure.title('Создание уникального пользователя')
     def test_create_unique_user(self):
         valid_user_data = generate_random_user_data()
-        response = requests.post(Urls.BASE_URL, json=valid_user_data)
+        response = requests.post(Urls.REGISTER_URL, json=valid_user_data)
         response_data = response.json()
         assert response.status_code == 200 and response_data.get('success') is True
 
     @allure.title('Создание уже зарегистрированного пользователя')
     def test_register_existing_user(self):
         valid_user_data = generate_random_user_data()
-        response = requests.post(Urls.BASE_URL, json=valid_user_data)
+        response = requests.post(Urls.REGISTER_URL, json=valid_user_data)
         response_data = response.json()
         assert response.status_code == 200 and response_data.get('success') is True
 
-        duplicate_response = requests.post(Urls.BASE_URL, json=valid_user_data)
+        duplicate_response = requests.post(Urls.REGISTER_URL, json=valid_user_data)
         duplicate_response_data = duplicate_response.json()
         assert (duplicate_response.status_code == 403 and duplicate_response_data.get('success') is False and
                 duplicate_response.json().get('message') == "User already exists")
@@ -43,7 +52,7 @@ class TestUserCreation(unittest.TestCase):
         user_data_without_password = valid_user_data.copy()
         user_data_without_password.pop('password', None)
 
-        response = requests.post(Urls.BASE_URL, json=user_data_without_password)
+        response = requests.post(Urls.REGISTER_URL, json=user_data_without_password)
         response_data = response.json()
         assert (response.status_code == 403 and response_data.get('success') is False and
                 response.json().get('message') == 'Email, password and name are required fields')
