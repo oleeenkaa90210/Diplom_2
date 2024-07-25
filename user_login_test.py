@@ -1,4 +1,3 @@
-import unittest
 import allure
 import requests
 from faker import Faker
@@ -7,40 +6,19 @@ from data import Urls
 fake = Faker()
 
 
-class TestUserLogin(unittest.TestCase):
-
-    tokens = {
-        "accessToken": "",
-        "refreshToken": ""
-    }
-
-    @classmethod
-    def setUpClass(cls):
-        cls.new_user_data = {
-            "email": fake.email(),
-            "password": fake.password(),
-            "name": fake.name()
-        }
-        response = requests.post(Urls.REGISTER_URL, json=cls.new_user_data)
-        response_data = response.json()
-        assert response_data['success'] is True
-        cls.tokens['accessToken'] = response_data['accessToken']
-        cls.tokens['refreshToken'] = response_data['refreshToken']
-
-    @classmethod
-    def tearDownClass(cls):
-        headers = {
-            "authorization": cls.tokens['accessToken']
-        }
-        response = requests.delete(Urls.USER_DELETE_URL, headers=headers)
-        assert response.status_code == 202
+class TestUserLogin:
 
     @allure.title('Успешная авторизация пользователя')
-    def test_login_with_new_user(self):
-        response = requests.post(Urls.LOGIN_URL, json=self.new_user_data)
+    def test_login_with_new_user(self, new_user, delete_user):
+        new_user_data, access_token = new_user
+        headers = {
+            "Authorization": access_token
+        }
+        response = requests.post(Urls.LOGIN_URL, headers=headers, json=new_user_data)
         response_data = response.json()
         assert (response.status_code == 200 and response_data.get('success') is True and
                 response_data.get('accessToken').startswith('Bearer'))
+        delete_user(access_token)
 
     @allure.title('Авторизация с некорректным паролем')
     def test_login_with_incorrect_password(self):
